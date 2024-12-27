@@ -1,127 +1,48 @@
+import time
 import os
-import requests
+import sys
 
-# Funções para Controle IR
-def ligar_tv_ir(tv):
-    os.system(f"irsend SEND_ONCE {tv}_power")
+# Se for usar IR, instale e configure a biblioteca apropriada, exemplo:
+# from gpiozero import LED
+# ir = LED(17)  # GPIO que controla o IR
+# Exemplo de controle IR (precisa do hardware correspondente)
+def controlar_tv_ir():
+    print("Enviando sinal IR para a TV...")
+    # Enviar código IR para a TV (substitua isso com o código IR correto)
+    # ir.on()  # Ligar o sinal IR
+    time.sleep(1)
+    # ir.off()  # Desligar o sinal IR
 
-def desligar_tv_ir(tv):
-    os.system(f"irsend SEND_ONCE {tv}_power_off")
+# Para controle via Wi-Fi, você precisará de uma rede configurada
+def controlar_tv_wifi():
+    print("Conectando à TV via Wi-Fi...")
+    # Use uma biblioteca como "wifi" ou "requests" para controlar a TV pela rede
+    # Exemplo de comando HTTP para controle de TV (modifique conforme necessário)
+    import requests
+    url = "http://ip_da_tv:porta_comando"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            print("Comando enviado com sucesso!")
+        else:
+            print("Falha ao enviar o comando.")
+    except Exception as e:
+        print(f"Erro ao tentar conectar com a TV: {e}")
 
-def aumentar_volume_ir(tv):
-    os.system(f"irsend SEND_ONCE {tv}_volume_up")
+# Função principal para controle
+def main():
+    print("Controle de TV - Selecione a opção:")
+    print("1 - Controle via IR")
+    print("2 - Controle via Wi-Fi")
+    escolha = input("Escolha a opção (1/2): ")
 
-def diminuir_volume_ir(tv):
-    os.system(f"irsend SEND_ONCE {tv}_volume_down")
-
-def mudar_canal_ir(tv, canal):
-    os.system(f"irsend SEND_ONCE {tv}_channel_{canal}")
-
-def mute_ir(tv):
-    os.system(f"irsend SEND_ONCE {tv}_mute")
-
-
-# Funções para Controle de TV via Wi-Fi
-
-# Funções para Samsung TV via Wi-Fi (SmartThings API)
-def ligar_tv_samsung(ip, token):
-    url = f"https://api.smartthings.com/v1/devices/{ip}/commands"
-    payload = {
-        "commands": [{
-            "component": "main",
-            "capability": "switch",
-            "command": "on"
-        }]
-    }
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        print("Samsung TV ligada com sucesso!")
+    if escolha == '1':
+        controlar_tv_ir()
+    elif escolha == '2':
+        controlar_tv_wifi()
     else:
-        print(f"Erro ao ligar TV: {response.status_code}")
+        print("Opção inválida!")
+        sys.exit(1)
 
-def desligar_tv_samsung(ip, token):
-    url = f"https://api.smartthings.com/v1/devices/{ip}/commands"
-    payload = {
-        "commands": [{
-            "component": "main",
-            "capability": "switch",
-            "command": "off"
-        }]
-    }
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        print("Samsung TV desligada com sucesso!")
-    else:
-        print(f"Erro ao desligar TV: {response.status_code}")
-
-
-# Funções para LG TV via Wi-Fi (WebOS API)
-def ligar_tv_lg(ip):
-    url = f"http://{ip}:3000/ir/rc"
-    payload = {
-        "type": "ir",
-        "data": {
-            "function": "power_on"
-        }
-    }
-    response = requests.post(url, json=payload)
-    if response.status_code == 200:
-        print("LG TV ligada com sucesso!")
-    else:
-        print(f"Erro ao ligar TV: {response.status_code}")
-
-def desligar_tv_lg(ip):
-    url = f"http://{ip}:3000/ir/rc"
-    payload = {
-        "type": "ir",
-        "data": {
-            "function": "power_off"
-        }
-    }
-    response = requests.post(url, json=payload)
-    if response.status_code == 200:
-        print("LG TV desligada com sucesso!")
-    else:
-        print(f"Erro ao desligar TV: {response.status_code}")
-
-
-# Funções para Sony TV via Wi-Fi (Bravia API)
-def ligar_tv_sony(ip, token):
-    url = f"http://{ip}/sony/system"
-    payload = {
-        "method": "setPowerStatus",
-        "params": ["on"],
-        "id": 1,
-        "version": "1.0"
-    }
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        print("Sony TV ligada com sucesso!")
-    else:
-        print(f"Erro ao ligar TV: {response.status_code}")
-
-def desligar_tv_sony(ip, token):
-    url = f"http://{ip}/sony/system"
-    payload = {
-        "method": "setPowerStatus",
-        "params": ["off"],
-        "id": 1,
-        "version": "1.0"
-    }
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        print("Sony TV desligada com sucesso!")
-    else:
-        print(f"Erro ao desligar TV: {response.status_code}")
+if __name__ == "__main__":
+    main()
