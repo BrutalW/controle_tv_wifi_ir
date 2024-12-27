@@ -1,48 +1,76 @@
-import time
 import os
-import sys
+import subprocess
+import requests
+import time
 
-# Se for usar IR, instale e configure a biblioteca apropriada, exemplo:
-# from gpiozero import LED
-# ir = LED(17)  # GPIO que controla o IR
-# Exemplo de controle IR (precisa do hardware correspondente)
-def controlar_tv_ir():
-    print("Enviando sinal IR para a TV...")
-    # Enviar código IR para a TV (substitua isso com o código IR correto)
-    # ir.on()  # Ligar o sinal IR
-    time.sleep(1)
-    # ir.off()  # Desligar o sinal IR
-
-# Para controle via Wi-Fi, você precisará de uma rede configurada
-def controlar_tv_wifi():
-    print("Conectando à TV via Wi-Fi...")
-    # Use uma biblioteca como "wifi" ou "requests" para controlar a TV pela rede
-    # Exemplo de comando HTTP para controle de TV (modifique conforme necessário)
-    import requests
-    url = "http://ip_da_tv:porta_comando"
+# Função para verificar se um dispositivo está respondendo ao ping
+def ping_ip(ip):
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print("Comando enviado com sucesso!")
+        output = subprocess.check_output(['ping', '-c', '1', ip], stderr=subprocess.STDOUT, universal_newlines=True)
+        if "1 packets transmitted, 1 received" in output:
+            return True
         else:
-            print("Falha ao enviar o comando.")
-    except Exception as e:
-        print(f"Erro ao tentar conectar com a TV: {e}")
+            return False
+    except subprocess.CalledProcessError:
+        return False
 
-# Função principal para controle
-def main():
-    print("Controle de TV - Selecione a opção:")
-    print("1 - Controle via IR")
-    print("2 - Controle via Wi-Fi")
-    escolha = input("Escolha a opção (1/2): ")
+# Função para escanear a rede e descobrir dispositivos conectados
+def descobrir_tv_ip():
+    # Substitua pelo intervalo de IPs da sua rede local (por exemplo, 192.168.1.0/24)
+    ips_para_tentar = [f"192.168.1.{i}" for i in range(1, 255)]
+    ips_encontrados = []
 
-    if escolha == '1':
+    for ip in ips_para_tentar:
+        if ping_ip(ip):
+            print(f"Dispositivo encontrado: {ip}")
+            # Adicionando um simples filtro para detectar dispositivos específicos
+            # (Aqui você pode adicionar mais condições conforme necessário)
+            if "Samsung" in ip or "LG" in ip:
+                ips_encontrados.append(ip)
+
+    return ips_encontrados
+
+# Função para controlar TV via Wi-Fi (Simulação)
+def controlar_tv_wifi(ip):
+    try:
+        print(f"Controlando TV via Wi-Fi no IP: {ip}")
+        # Exemplo de código para enviar um comando via API (aqui é só uma simulação)
+        response = requests.post(f"http://{ip}/api/command", data={"command": "volume_up"})
+        if response.status_code == 200:
+            print(f"Comando enviado para a TV em {ip}")
+        else:
+            print(f"Erro ao enviar comando para a TV em {ip}")
+    except requests.exceptions.RequestException as e:
+        print(f"Erro na comunicação com a TV: {e}")
+
+# Função para controlar TV via IR (Simulação)
+def controlar_tv_ir():
+    print("Controlando TV via IR...")
+    # Implementação para controle IR via hardware no Termux
+    # Usaria uma biblioteca como a LIRC, mas em Termux sem root é complicado
+    # Você precisaria de um adaptador IR USB compatível para isso funcionar
+    print("Comando IR enviado")
+
+# Função principal para encontrar e controlar TVs
+def controlar_tvs():
+    print("Buscando TVs na rede...")
+    tv_ips = descobrir_tv_ip()
+
+    if not tv_ips:
+        print("Nenhuma TV encontrada na rede.")
+        return
+
+    for ip in tv_ips:
+        print(f"Controlando a TV com IP {ip}...")
+        
+        # Exemplo de controle via Wi-Fi
+        controlar_tv_wifi(ip)
+        
+        # Exemplo de controle via IR (mesmo sem identificar o IP)
         controlar_tv_ir()
-    elif escolha == '2':
-        controlar_tv_wifi()
-    else:
-        print("Opção inválida!")
-        sys.exit(1)
+        
+        time.sleep(1)  # Pausa entre os comandos
 
+# Executando o script
 if __name__ == "__main__":
-    main()
+    controlar_tvs()
